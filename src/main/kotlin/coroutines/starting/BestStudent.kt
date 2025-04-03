@@ -1,4 +1,4 @@
-package coroutines.starting.beststudent
+package coroutines.starting
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -12,7 +12,13 @@ import kotlin.test.assertEquals
 class BestStudentUseCase(
     private val repo: StudentsRepository
 ) {
-    suspend fun getBestStudent(semester: String): Student = TODO()
+    suspend fun getBestStudent(semester: String): Student = coroutineScope {
+        repo.getStudentIds(semester)
+            .map { id -> async { repo.getStudent(id) } }
+            .awaitAll()
+            .maxByOrNull { it.result }
+            ?: throw IllegalStateException()
+    }
 }
 
 data class Student(val id: Int, val result: Double, val semester: String)
