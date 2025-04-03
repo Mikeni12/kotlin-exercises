@@ -1,4 +1,4 @@
-package coroutines.starting.userdetailsrepository
+package coroutines.starting
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.currentTime
@@ -11,8 +11,15 @@ class UserDetailsRepository(
     private val userDatabase: UserDetailsDatabase,
     private val backgroundScope: CoroutineScope,
 ) {
-    suspend fun getUserDetails(): UserDetails {
-        TODO()
+    suspend fun getUserDetails(): UserDetails = coroutineScope {
+        val cachedUser = userDatabase.load()
+        if (cachedUser != null) return@coroutineScope cachedUser
+        val clientName = async { client.getName() }
+        val clientFriends = async { client.getFriends() }
+        val clientData = async { client.getProfile() }
+        val user = UserDetails(clientName.await(), clientFriends.await(), clientData.await())
+        backgroundScope.launch { userDatabase.save(user) }
+        return@coroutineScope user
     }
 }
 
@@ -145,6 +152,7 @@ class UserDetailsRepositoryTest {
             delay(loadTime)
             return stored
         }
+
         override suspend fun save(user: UserDetails) {
             delay(saveTime)
             stored = user
