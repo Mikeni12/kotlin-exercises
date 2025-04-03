@@ -1,4 +1,4 @@
-package coroutines.recipes.mapasync
+package coroutines.recipes
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.currentTime
@@ -10,7 +10,9 @@ import kotlin.test.assertTrue
 
 suspend fun <T, R> Iterable<T>.mapAsync(
     transformation: suspend (T) -> R
-): List<R> = TODO()
+): List<R> = coroutineScope {
+    map { async { transformation(it) } }.awaitAll()
+}
 
 class MapAsyncTest {
     @Test
@@ -86,10 +88,10 @@ class MapAsyncTest {
         // then should propagate exception
         assertTrue(result.isFailure)
         assertEquals(e, result.exceptionOrNull())
-        
+
         // without waiting for slower transformations
         assertEquals(500, currentTime)
-        
+
         // and cancel slower transformations
         assert(jobs.all { it.job.isCompleted })
     }
