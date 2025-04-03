@@ -1,4 +1,4 @@
-package coroutines.suspension.continuationstorage
+package coroutines.suspension
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -16,7 +17,8 @@ var continuation: Continuation<String>? = null
 
 suspend fun continuationSteal(console: Console) {
     console.println("Before")
-    // TODO
+    val result = suspendCancellableCoroutine { continuation = it }
+    console.println(result)
     console.println("After")
 }
 
