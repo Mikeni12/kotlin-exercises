@@ -1,4 +1,4 @@
-package coroutines.dispatcher.discnewsrepository
+package coroutines.dispatcher
 
 import kotlinx.coroutines.*
 import org.junit.Test
@@ -8,9 +8,13 @@ import kotlin.test.assertEquals
 class DiscNewsRepository(
     private val discReader: DiscReader
 ) : NewsRepository {
-    override suspend fun getNews(newsId: String): News {
+
+    private val dispatcher = Dispatchers.IO
+        .limitedParallelism(200)
+
+    override suspend fun getNews(newsId: String): News = withContext(dispatcher) {
         val (title, content) = discReader.read("user/$newsId")
-        return News(title, content)
+        News(title, content)
     }
 }
 
